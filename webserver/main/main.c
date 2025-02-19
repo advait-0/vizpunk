@@ -12,15 +12,48 @@
 #include "esp_random.h"
 #include "dirent.h"
 
-#define TAG "ESP32_GRAPH"
+#define TAG "ESP32_WEB"
 
-// TO DO: Replace with real readings
+// Function to get random sensor value
 int get_sensor_value() {
-    return esp_random() % 4096; // Random value between 0-4096
+    return esp_random() % 4096;
 }
 
-// Serve the main HTML page
+// Serve landing page
 esp_err_t page_handler(httpd_req_t *req) {
+    const char *html = "<!DOCTYPE html>"
+        "<html lang='en'>"
+        "<head>"
+        "<meta charset='UTF-8'>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "<title>ESP32 Control Panel</title>"
+        "<style>"
+        "body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; margin: 0; }"
+        ".container { text-align: center; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }"
+        "h1 { margin-bottom: 20px; }"
+        ".btn { display: block; width: 100%; padding: 12px; margin: 10px 0; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }"
+        ".btn.adc { background: #007BFF; color: white; }"
+        ".btn.function { background: #28A745; color: white; }"
+        ".btn.psu { background: #FFC107; color: white; }"
+        ".btn:hover { opacity: 0.9; }"
+        "</style>"
+        "</head>"
+        "<body>"
+        "<div class='container'>"
+        "<h1>ESP32 Control Panel</h1>"
+        "<button class='btn adc' onclick=\"location.href='/adc'\">ADC</button>"
+        "<button class='btn function' onclick=\"location.href='/function_generator'\">Function Generator</button>"
+        "<button class='btn psu' onclick=\"location.href='/psu'\">PSU</button>"
+        "</div>"
+        "</body>"
+        "</html>";
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+
+// Serve ADC page
+esp_err_t adc_handler(httpd_req_t *req) {
     const char *html = "<!DOCTYPE html>"
         "<html lang='en'><head><meta charset='UTF-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
@@ -84,26 +117,21 @@ esp_err_t page_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+// Serve Function Generator page
+esp_err_t function_generator_handler(httpd_req_t *req) {
+    const char *html = "<html><body><h1>Function Generator Settings</h1>"
+        "<p>Configure waveform parameters here.</p>"
+        "</body></html>";
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
 
-// Serve JavaScript file from SPIFFS
-esp_err_t js_handler(httpd_req_t *req) {
-    FILE *f = fopen("/spiffs/uPlot.iife.min.js", "r");
-    if (!f) {
-        ESP_LOGE(TAG, "Failed to open uplot.js");
-        httpd_resp_send_404(req);
-        return ESP_FAIL;
-    }
-    
-    char buffer[1024];
-    size_t read_bytes;
-    httpd_resp_set_type(req, "application/javascript");
-
-    while ((read_bytes = fread(buffer, 1, sizeof(buffer), f)) > 0) {
-        httpd_resp_send_chunk(req, buffer, read_bytes);
-    }
-
-    fclose(f);
-    httpd_resp_send_chunk(req, NULL, 0);
+// Serve PSU page
+esp_err_t psu_handler(httpd_req_t *req) {
+    const char *html = "<html><body><h1>PSU Settings</h1>"
+        "<p>Set output voltage and current.</p>"
+        "</body></html>";
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
@@ -115,39 +143,26 @@ esp_err_t graph_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
-// Start HTTP Server
-httpd_handle_t start_webserver(void) {
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    httpd_handle_t server = NULL;
-
-    if (httpd_start(&server, &config) == ESP_OK) {
-        httpd_uri_t page_uri = { .uri = "/", .method = HTTP_GET, .handler = page_handler, .user_ctx = NULL };
-        httpd_uri_t js_uri = { .uri = "/uPlot.iife.min.js", .method = HTTP_GET, .handler = js_handler, .user_ctx = NULL };
-        httpd_uri_t graph_uri = { .uri = "/graph", .method = HTTP_GET, .handler = graph_handler, .user_ctx = NULL };
-
-        httpd_register_uri_handler(server, &page_uri);
-        httpd_register_uri_handler(server, &js_uri);
-        httpd_register_uri_handler(server, &graph_uri);
+// Serve JavaScript file from SPIFFS
+esp_err_t js_handler(httpd_req_t *req) {
+    FILE *f = fopen("/spiffs/uPlot.iife.min.js", "r");  
+    if (!f) {
+        ESP_LOGE(TAG, "Failed to open uPlot.iife.min.js in SPIFFS");
+        httpd_resp_send_404(req);
+        return ESP_FAIL;
     }
-    return server;
-}
 
-// Initialize SPIFFS
-void init_spiffs() {
-    ESP_LOGI(TAG, "Initializing SPIFFS...");
-    esp_vfs_spiffs_conf_t conf = {
-        .base_path = "/spiffs",
-        .partition_label = NULL,
-        .max_files = 5,
-        .format_if_mount_failed = true
-    };
+    char buffer[1024];
+    size_t read_bytes;
+    httpd_resp_set_type(req, "application/javascript");
 
-    esp_err_t ret = esp_vfs_spiffs_register(&conf);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "SPIFFS Mount Failed");
-    } else {
-        ESP_LOGI(TAG, "SPIFFS Mounted Successfully");
+    while ((read_bytes = fread(buffer, 1, sizeof(buffer), f)) > 0) {
+        httpd_resp_send_chunk(req, buffer, read_bytes);
     }
+
+    fclose(f);
+    httpd_resp_send_chunk(req, NULL, 0);
+    return ESP_OK;
 }
 
 void list_spiffs_files() {
@@ -163,6 +178,39 @@ void list_spiffs_files() {
     }
 }
 
+// Start HTTP Server
+httpd_handle_t start_webserver(void) {
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_handle_t server = NULL;
+    
+    if (httpd_start(&server, &config) == ESP_OK) {
+        httpd_uri_t uris[] = {
+            {"/", HTTP_GET, page_handler, NULL},
+            {"/adc", HTTP_GET, adc_handler, NULL},
+            {"/function_generator", HTTP_GET, function_generator_handler, NULL},
+            {"/psu", HTTP_GET, psu_handler, NULL},
+            {"/graph", HTTP_GET, graph_handler, NULL},
+            {"/uPlot.iife.min.js", HTTP_GET, js_handler, NULL}
+        };
+        for (int i = 0; i < sizeof(uris) / sizeof(uris[0]); i++) {
+            httpd_register_uri_handler(server, &uris[i]);
+        }
+    }
+    return server;
+}
+
+// Initialize SPIFFS
+void init_spiffs() {
+    ESP_LOGI(TAG, "Initializing SPIFFS...");
+    esp_vfs_spiffs_conf_t conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true
+    };
+    esp_vfs_spiffs_register(&conf);
+}
+
 // Initialize Wi-Fi
 void init_wifi() {
     ESP_LOGI(TAG, "Setting up Wi-Fi...");
@@ -172,15 +220,14 @@ void init_wifi() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&cfg);
     wifi_config_t wifi_config = {
-        .ap = { .ssid = "ESP32_Graph", .ssid_len = strlen("ESP32_Graph"), .password = "", .max_connection = 4, .authmode = WIFI_AUTH_OPEN }
+        .ap = { .ssid = "ESP32_Device", .ssid_len = strlen("ESP32_Device"), .password = "", .max_connection = 4, .authmode = WIFI_AUTH_OPEN }
     };
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
     esp_wifi_start();
-    ESP_LOGI(TAG, "Wi-Fi Setup Complete!");
 }
 
-// Main App Entry
+// Main function
 void app_main(void) {
     ESP_ERROR_CHECK(nvs_flash_init());
     init_spiffs();
