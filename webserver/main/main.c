@@ -11,13 +11,65 @@
 #include "esp_spiffs.h"
 #include "esp_random.h"
 #include "dirent.h"
+#include "lwip/sockets.h"
+#include "lwip/netdb.h"
+#include "lwip/api.h"
+#include "lwip/err.h"
 
+#define DNS_PORT 53
 #define TAG "ESP32_WEB"
 
 // Function to get random sensor value
 int get_sensor_value() {
     return esp_random() % 4096;
 }
+
+void dns_server_task(void *pvParameters) {
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    struct sockaddr_in server_addr, client_addr;
+    
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(DNS_PORT);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    
+    bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
+
+    char buffer[512];
+    socklen_t client_len = sizeof(client_addr);
+    
+    while (1) {
+        int recv_len = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &client_len);
+        if (recv_len > 0) {
+            // Respond with our ESP32's IP address (192.168.4.1)
+            buffer[2] |= 0x80; // Set response flag
+            buffer[3] |= 0x00; // Set recursion available
+            buffer[7] = 1;     // Set answer count to 1
+            
+            // Set answer section
+            size_t offset = recv_len;
+            buffer[offset++] = 0xC0; buffer[offset++] = 0x0C; // Pointer to question
+            buffer[offset++] = 0x00; buffer[offset++] = 0x01; // Type A
+            buffer[offset++] = 0x00; buffer[offset++] = 0x01; // Class IN
+            buffer[offset++] = 0x00; buffer[offset++] = 0x00; buffer[offset++] = 0x00; buffer[offset++] = 0x3C; // TTL
+            buffer[offset++] = 0x00; buffer[offset++] = 0x04; // Data length
+            buffer[offset++] = 192; buffer[offset++] = 168; buffer[offset++] = 4; buffer[offset++] = 1; // 192.168.4.1
+
+            sendto(sock, buffer, offset, 0, (struct sockaddr*)&client_addr, client_len);
+        }
+    }
+}
+
+void start_dns_server() {
+    xTaskCreate(dns_server_task, "dns_server", 4096, NULL, 5, NULL);
+}
+
+esp_err_t redirect_handler(httpd_req_t *req) {
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
 
 // Serve landing page
 esp_err_t page_handler(httpd_req_t *req) {
@@ -190,7 +242,8 @@ httpd_handle_t start_webserver(void) {
             {"/function_generator", HTTP_GET, function_generator_handler, NULL},
             {"/psu", HTTP_GET, psu_handler, NULL},
             {"/graph", HTTP_GET, graph_handler, NULL},
-            {"/uPlot.iife.min.js", HTTP_GET, js_handler, NULL}
+            {"/uPlot.iife.min.js", HTTP_GET, js_handler, NULL},
+            {"*", HTTP_GET, redirect_handler, NULL}  
         };
         for (int i = 0; i < sizeof(uris) / sizeof(uris[0]); i++) {
             httpd_register_uri_handler(server, &uris[i]);
@@ -233,5 +286,6 @@ void app_main(void) {
     init_spiffs();
     list_spiffs_files();
     init_wifi();
+    start_dns_server();
     start_webserver();
 }
