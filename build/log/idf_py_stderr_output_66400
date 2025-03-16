@@ -1,0 +1,49 @@
+/home/lakshaya/esp/hello_world/main/hello_world_main.c: In function 'init_adc_continuous':
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:32:9: warning: braces around scalar initializer
+   32 |         .adc_pattern = {
+      |         ^
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:32:9: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:33:13: error: field name not in record or union initializer
+   33 |             .atten = ADC_ATTEN_DB_12,    // Use 12 dB attenuation (recommended replacement)
+      |             ^
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:33:13: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:33:22: error: initialization of 'adc_digi_pattern_config_t *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+   33 |             .atten = ADC_ATTEN_DB_12,    // Use 12 dB attenuation (recommended replacement)
+      |                      ^~~~~~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:33:22: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:34:13: error: field name not in record or union initializer
+   34 |             .channel = ADC_CHANNEL,
+      |             ^
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:34:13: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:7:30: warning: excess elements in scalar initializer
+    7 | #define ADC_CHANNEL          ADC_CHANNEL_6      // Example: GPIO34
+      |                              ^~~~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:34:24: note: in expansion of macro 'ADC_CHANNEL'
+   34 |             .channel = ADC_CHANNEL,
+      |                        ^~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:7:30: note: (near initialization for 'adc_cont_config.adc_pattern')
+    7 | #define ADC_CHANNEL          ADC_CHANNEL_6      // Example: GPIO34
+      |                              ^~~~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:34:24: note: in expansion of macro 'ADC_CHANNEL'
+   34 |             .channel = ADC_CHANNEL,
+      |                        ^~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:35:13: error: field name not in record or union initializer
+   35 |             .bit_width = ADC_BITWIDTH_12,
+      |             ^
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:35:13: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:35:26: warning: excess elements in scalar initializer
+   35 |             .bit_width = ADC_BITWIDTH_12,
+      |                          ^~~~~~~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:35:26: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:36:13: error: field name not in record or union initializer
+   36 |             .unit = ADC_UNIT_1,
+      |             ^
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:36:13: note: (near initialization for 'adc_cont_config.adc_pattern')
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:36:21: warning: excess elements in scalar initializer
+   36 |             .unit = ADC_UNIT_1,
+      |                     ^~~~~~~~~~
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:36:21: note: (near initialization for 'adc_cont_config.adc_pattern')
+make[2]: *** [esp-idf/main/CMakeFiles/__idf_main.dir/build.make:76: esp-idf/main/CMakeFiles/__idf_main.dir/hello_world_main.c.obj] Error 1
+make[1]: *** [CMakeFiles/Makefile2:5650: esp-idf/main/CMakeFiles/__idf_main.dir/all] Error 2
+make[1]: *** Waiting for unfinished jobs....
+make: *** [Makefile:136: all] Error 2

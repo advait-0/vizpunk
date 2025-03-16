@@ -1,0 +1,8 @@
+/home/lakshaya/esp/hello_world/main/hello_world_main.c: In function 'init_adc_continuous':
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:42:35: error: incompatible types when assigning to type 'adc_digi_pattern_config_t *' from type 'adc_digi_pattern_config_t'
+   42 |     adc_cont_config.adc_pattern = adc_pattern_1;
+      |                                   ^~~~~~~~~~~~~
+make[2]: *** [esp-idf/main/CMakeFiles/__idf_main.dir/build.make:76: esp-idf/main/CMakeFiles/__idf_main.dir/hello_world_main.c.obj] Error 1
+make[1]: *** [CMakeFiles/Makefile2:5650: esp-idf/main/CMakeFiles/__idf_main.dir/all] Error 2
+make[1]: *** Waiting for unfinished jobs....
+make: *** [Makefile:136: all] Error 2

@@ -1,0 +1,8 @@
+/home/lakshaya/esp/hello_world/main/hello_world_main.c: In function 'adc_print_task':
+/home/lakshaya/esp/hello_world/main/hello_world_main.c:61:33: error: implicit declaration of function 'EXAMPLE_ADC_GET_DATA' [-Wimplicit-function-declaration]
+   61 |                 uint16_t data = EXAMPLE_ADC_GET_DATA(p);
+      |                                 ^~~~~~~~~~~~~~~~~~~~
+make[3]: *** [esp-idf/main/CMakeFiles/__idf_main.dir/build.make:76: esp-idf/main/CMakeFiles/__idf_main.dir/hello_world_main.c.obj] Error 1
+make[2]: *** [CMakeFiles/Makefile2:5650: esp-idf/main/CMakeFiles/__idf_main.dir/all] Error 2
+make[1]: *** [CMakeFiles/Makefile2:2448: CMakeFiles/flash.dir/rule] Error 2
+make: *** [Makefile:286: flash] Error 2
