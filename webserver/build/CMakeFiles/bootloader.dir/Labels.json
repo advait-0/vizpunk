@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}

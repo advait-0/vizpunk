@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader
+/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader.rule
+/home/lakshaya/vizpunk/webserver/build/CMakeFiles/bootloader-complete.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/lakshaya/vizpunk/webserver/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

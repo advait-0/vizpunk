@@ -81,6 +81,7 @@ void adc_read_task(void *pvParameters)
             // ESP_LOGI(TAG, "ADC Value: %d", adc_data);
             // xSemaphoreGive(mutex);
         }
+        ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10)); //TEST THIS
     }
 }
 
