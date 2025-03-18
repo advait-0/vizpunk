@@ -17,7 +17,17 @@
 #include "lwip/err.h"
 
 #define DNS_PORT 53
-#define TAG "ESP32_WEB"
+#define LOG_TAG "ESP32_WEB"
+#define FSYNC_PIN 5    
+#define MOSI_PIN 23    
+#define SCLK_PIN 18    
+#define SPI_HOST VSPI_HOST   
+
+static const char *TAG = "FUNC_GEN";
+
+/* Global Variables to Store User Input */
+static int function_generator_freq = 1000;  // Default Frequency (Hz)
+static char function_generator_wave[16] = "sine";  // Default Waveform Type
 
 // Function to get random sensor value
 int get_sensor_value() {
@@ -169,13 +179,92 @@ esp_err_t adc_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
-// Serve Function Generator page
 esp_err_t function_generator_handler(httpd_req_t *req) {
-    const char *html = "<html><body><h1>Function Generator Settings</h1>"
-        "<p>Configure waveform parameters here.</p>"
+    const char *html = "<!DOCTYPE html>"
+        "<html><head><title>Function Generator</title>"
+        "<style>"
+        "body {font-family: Arial, sans-serif; text-align: center; padding: 20px;}"
+        "input, select, button {margin: 10px; padding: 10px; font-size: 16px;}"
+        ".container {max-width: 400px; margin: auto; padding: 20px; border: 2px solid #ddd; border-radius: 10px; box-shadow: 2px 2px 12px #aaa;}"
+        "</style></head>"
+        "<body><h1>Function Generator Settings</h1>"
+        "<div class='container'>"
+        "<label>Frequency (Hz):</label><br>"
+        "<input type='number' id='freq' min='1' max='100000' value='1000'><br>"
+        "<label>Waveform Type:</label><br>"
+        "<select id='waveform'>"
+        "<option value='sine'>Sine</option>"
+        "<option value='square'>Square</option>"
+        "<option value='triangle'>Triangle</option>"
+        "</select><br>"
+        "<button onclick='sendData()'>Set Function Generator</button>"
+        "</div>"
+        "<script>"
+        "function sendData() {"
+        "   let freq = document.getElementById('freq').value;"
+        "   let wave = document.getElementById('waveform').value;"
+        "   fetch('/set_function_generator?freq=' + freq + '&wave=' + wave)"
+        "       .then(response => response.text())"
+        "       .then(data => alert(data));"
+        "}"
+        "</script>"
         "</body></html>";
+    
     httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
+}
+
+/* Handler to Process User Input and Save It */
+esp_err_t set_function_generator_handler(httpd_req_t *req) {
+    char query[100];  // Buffer to store the query string
+    char freq[10] = {0}; 
+    char wave[10] = {0};
+
+    // Get the query string (e.g., "freq=1000&wave=sine")
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+        ESP_LOGI(TAG, "Query string: %s", query);
+
+        // Extract "freq" parameter
+        if (httpd_query_key_value(query, "freq", freq, sizeof(freq)) == ESP_OK) {
+            ESP_LOGI(TAG, "Frequency: %s", freq);
+        } else {
+            ESP_LOGW(TAG, "Failed to get 'freq'");
+        }
+
+        // Extract "wave" parameter
+        if (httpd_query_key_value(query, "wave", wave, sizeof(wave)) == ESP_OK) {
+            ESP_LOGI(TAG, "Waveform: %s", wave);
+        } else {
+            ESP_LOGW(TAG, "Failed to get 'wave'");
+        }
+    } else {
+        ESP_LOGW(TAG, "No query string received");
+    }
+    function_generator_freq = atoi(freq);
+    function_generator_wave = 1;
+    // Send a response back
+    httpd_resp_send(req, "Function generator settings updated!", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+
+/* Register Endpoints */
+void register_server_handlers(httpd_handle_t server) {
+    httpd_uri_t uri_function_generator = {
+        .uri      = "/",
+        .method   = HTTP_GET,
+        .handler  = function_generator_handler,
+        .user_ctx = NULL
+    };
+    httpd_register_uri_handler(server, &uri_function_generator);
+
+    httpd_uri_t uri_set_function_generator = {
+        .uri      = "/set_function_generator",
+        .method   = HTTP_GET,
+        .handler  = set_function_generator_handler,
+        .user_ctx = NULL
+    };
+    httpd_register_uri_handler(server, &uri_set_function_generator);
 }
 
 // Serve PSU page
@@ -199,7 +288,7 @@ esp_err_t graph_handler(httpd_req_t *req) {
 esp_err_t js_handler(httpd_req_t *req) {
     FILE *f = fopen("/spiffs/uPlot.iife.min.js", "r");  
     if (!f) {
-        ESP_LOGE(TAG, "Failed to open uPlot.iife.min.js in SPIFFS");
+        ESP_LOGE(LOG_TAG, "Failed to open uPlot.iife.min.js in SPIFFS");
         httpd_resp_send_404(req);
         return ESP_FAIL;
     }
@@ -254,7 +343,7 @@ httpd_handle_t start_webserver(void) {
 
 // Initialize SPIFFS
 void init_spiffs() {
-    ESP_LOGI(TAG, "Initializing SPIFFS...");
+    ESP_LOGI(LOG_TAG, "Initializing SPIFFS...");
     esp_vfs_spiffs_conf_t conf = {
         .base_path = "/spiffs",
         .partition_label = NULL,
@@ -266,7 +355,7 @@ void init_spiffs() {
 
 // Initialize Wi-Fi
 void init_wifi() {
-    ESP_LOGI(TAG, "Setting up Wi-Fi...");
+    ESP_LOGI(LOG_TAG, "Setting up Wi-Fi...");
     esp_netif_init();
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_ap();
