@@ -32,6 +32,11 @@ This system runs on an **ESP32-based web server**, allowing users to **control a
    ```
 
 2. Install the latest version of ESP-IDF using their [official guide.](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html#manual-installation)
+3. Flash the graph dependencies to memory.
+    ```sh
+    pip install esptool
+    esptool.py --chip esp32 write_flash 0x110000 spiffs.bin
+    ```
 3. Build and flash the project using `idf.py flash monitor`
 4. Connect to the SSID `Vizpunk` on your smartphone or laptop, the captive portal should redirect you to the vizpunk home page or go to [vizpunk.com](http://vizpunk.com).
 5. Get your work done with our easy-to-use GUI.
