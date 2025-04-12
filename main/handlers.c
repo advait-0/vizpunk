@@ -1,6 +1,8 @@
 #include <esp_http_server.h>
 #include "handlers.h"
 
+extern volatile uint16_t adc_data;
+
 // Serve landing page
 esp_err_t page_handler(httpd_req_t *req) {
     const char *html = "<!DOCTYPE html>"
@@ -204,7 +206,7 @@ esp_err_t psu_handler(httpd_req_t *req) {
 // Serve real-time sensor data
 esp_err_t graph_handler(httpd_req_t *req) {
     char data[16];
-    snprintf(data, sizeof(data), "%d", get_sensor_value());
+    snprintf(data, sizeof(data), "%d", adc_data);
     httpd_resp_send(req, data, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
