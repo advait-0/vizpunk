@@ -1,0 +1,27 @@
+\begin{thebibliography}{xx}
+
+\harvarditem{Kottwitz}{2021}{kottwitzlatex2021}
+Kottwitz, S.  \harvardyearleft 2021\harvardyearright , {\em {LaTeX} beginner's
+  guide : create visually appealing texts, articles, and books for business and
+  science using {LaTeX}}, Packt.
+\newblock ISBN: 9781801072588.
+
+\harvarditem{Lamport}{1994}{lamport1994latex}
+Lamport, L.  \harvardyearleft 1994\harvardyearright , {\em {LATEX}: a document
+  preparation system: user's guide and reference manual}, Addison-wesley.
+
+\harvarditem{{University of Reading}}{2023{\em a}}{uor_plagiarism}
+{University of Reading}  \harvardyearleft 2023{\em a}\harvardyearright ,
+  `Avoiding unintentional plagiarism: Guidance on citing references for
+  students at the university of reading'.
+\newblock (accessed June 6, 2023).
+\newline\harvardurl{https://libguides.reading.ac.uk/citing-references/avoidingplagiarism}
+
+\harvarditem{{University of Reading}}{2023{\em b}}{uor_refernce_style}
+{University of Reading}  \harvardyearleft 2023{\em b}\harvardyearright ,
+  `Different styles \& systems of referencing: Guidance on citing references
+  for students at the university of reading'.
+\newblock (accessed June 6, 2023).
+\newline\harvardurl{https://libguides.reading.ac.uk/citing-references/referencingstyles}
+
+\end{thebibliography}

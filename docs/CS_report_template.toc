@@ -1,0 +1,54 @@
+\contentsline {chapter}{List of Figures}{vii}{chapter*.5}%
+\contentsline {chapter}{List of Tables}{viii}{chapter*.6}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Background}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Problem statement}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Aims and objectives}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Solution approach}{2}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}A subsection 1}{2}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}A subsection 2}{2}{subsection.1.4.2}%
+\contentsline {subsubsection}{A subsection 1 of a subsection}{2}{section*.8}%
+\contentsline {subsubsection}{A subsection 2 of a subsection}{2}{section*.9}%
+\contentsline {section}{\numberline {1.5}Summary of contributions and achievements}{3}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Organization of the report}{3}{section.1.6}%
+\contentsline {chapter}{\numberline {2}Literature Review}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Example of in-text citation of references in \LaTeX }{4}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Reference Resources}{5}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Changing Bibliography Styles}{5}{subsection.2.1.2}%
+\contentsline {section}{\numberline {2.2}Avoiding unintentional plagiarism}{5}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Critique of the review}{5}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Summary}{5}{section.2.4}%
+\contentsline {chapter}{\numberline {3}Methodology}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Examples of the sections of a methodology chapter}{6}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Example of a software/Web development main text structure}{7}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Example of an algorithm analysis main text structure}{7}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Example of an application type main text structure}{7}{subsection.3.1.3}%
+\contentsline {subsection}{\numberline {3.1.4}Example of a science lab-type main text structure}{8}{subsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.1.5}Ethical considerations}{8}{subsection.3.1.5}%
+\contentsline {section}{\numberline {3.2}Example of an Equation in \LaTeX }{9}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Example of a Figure in \LaTeX }{9}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Example of an algorithm in \LaTeX }{10}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Example of code snippet in \LaTeX }{10}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Example of in-text citation style}{11}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Example of the equations and illustrations placement and reference in the text}{11}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}Example of the equations and illustrations style}{11}{subsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.6.3}Tools for In-text Referencing}{12}{subsection.3.6.3}%
+\contentsline {section}{\numberline {3.7}Summary}{12}{section.3.7}%
+\contentsline {chapter}{\numberline {4}Results}{13}{chapter.4}%
+\contentsline {section}{\numberline {4.1}A section}{13}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Example of a Table in \LaTeX }{14}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Example of captions style}{14}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Summary}{14}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Discussion and Analysis}{15}{chapter.5}%
+\contentsline {section}{\numberline {5.1}A section}{15}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Significance of the findings}{15}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Limitations}{15}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Summary}{15}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Conclusions and Future Work}{16}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Conclusions}{16}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Future work}{16}{section.6.2}%
+\contentsline {chapter}{\numberline {7}Reflection}{17}{chapter.7}%
+\contentsline {chapter}{References}{18}{chapter*.17}%
+\contentsline {chapter}{Appendices}{19}{section*.18}%
+\contentsline {chapter}{\numberline {A}An Appendix Chapter (Optional)}{19}{appendix.1.A}%
+\contentsline {chapter}{\numberline {B}An Appendix Chapter (Optional)}{20}{appendix.1.B}%
