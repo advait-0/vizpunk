@@ -8,6 +8,10 @@ esp_err_t page_handler(httpd_req_t *req);
 
 esp_err_t adc_handler(httpd_req_t *req);
 
+esp_err_t logic_analyzer_handler(httpd_req_t *req);
+
+esp_err_t start_logic_capture_handler(httpd_req_t *req);
+
 esp_err_t dummy_handler(httpd_req_t *req);
 
 esp_err_t function_generator_handler(httpd_req_t *req);

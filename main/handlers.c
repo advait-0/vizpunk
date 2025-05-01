@@ -2,6 +2,17 @@
 #include "handlers.h"
 
 extern volatile uint16_t adc_data;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void setup(void);  // C-style declaration of the C++ function
+
+#ifdef __cplusplus
+}
+#endif
+
+void command_loop_task(void *param);
 
 // Serve landing page
 esp_err_t page_handler(httpd_req_t *req) {
@@ -19,6 +30,7 @@ esp_err_t page_handler(httpd_req_t *req) {
         ".btn.adc { background: #007BFF; color: white; }"
         ".btn.function { background: #28A745; color: white; }"
         ".btn.psu { background: #FFC107; color: white; }"
+        ".btn.logic { background: #DC3545; color: white; }"
         ".btn:hover { opacity: 0.9; }"
         "</style>"
         "</head>"
@@ -28,11 +40,83 @@ esp_err_t page_handler(httpd_req_t *req) {
         "<button class='btn adc' onclick=\"location.href='/adc'\">ADC</button>"
         "<button class='btn function' onclick=\"location.href='/function_generator'\">Function Generator</button>"
         "<button class='btn psu' onclick=\"location.href='/psu'\">PSU</button>"
+        "<button class='btn logic' onclick=\"location.href='/logic_analyzer'\">Logic Analyzer</button>"
         "</div>"
         "</body>"
         "</html>";
 
     httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t logic_analyzer_handler(httpd_req_t *req) {
+    const char *html = "<!DOCTYPE html>"
+        "<html lang='en'><head><meta charset='UTF-8'>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "<title>ESP32 Logic Analyzer</title>"
+        "<script src='/uPlot.iife.min.js'></script>"
+        "<style>"
+        "body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }"
+        ".container { max-width: 600px; margin: auto; padding: 20px; border: 2px solid #ddd; border-radius: 10px; box-shadow: 2px 2px 12px #aaa; }"
+        "#chart { width: 100%; height: 300px; margin-top: 20px; }"
+        "</style></head>"
+        "<body>"
+        "<h1>ESP32 Logic Analyzer</h1>"
+        "<div class='container'>"
+        "<button onclick='startCapture()'>Start Capture</button>"
+        "</div>"
+        "<h2>Captured Data</h2><div id='chart'></div>"
+        "<script>"
+        "let data = [[], []];"
+        "let maxDataPoints = 100;"
+        "const startTime = Date.now();"
+
+        "const opts = {"
+        "    title: 'Logic Level vs. Time',"
+        "    width: 600,"
+        "    height: 300,"
+        "    scales: { x: { time: false }, y: { min: 0, max: 1.2 } },"
+        "    axes: ["
+        "        { label: 'Time (s)' },"
+        "        { label: 'Logic Level' }"
+        "    ],"
+        "    series: [ {}, { label: 'Signal', stroke: 'blue', width: 2, points: { show: true } } ]"
+        "};"
+
+        "document.addEventListener('DOMContentLoaded', () => {"
+        "    if (typeof uPlot !== 'undefined') {"
+        "        window.chart = new uPlot(opts, data, document.getElementById('chart'));"
+        "    } else { console.error('uPlot failed to load.'); }"
+        "});"
+
+        "function startCapture() {"
+        "    fetch('/start_logic_capture')"
+        "    .then(res => res.json())"
+        "    .then(captureData => {"
+        "        let timeArray = captureData.time;"
+        "        let logicArray = captureData.logic;"
+        "        data = [timeArray, logicArray];"
+        "        window.chart.setData(data);"
+        "    })"
+        "    .catch(err => console.error('Capture error:', err));"
+        "}"
+        "</script></body></html>";
+
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t start_logic_capture_handler(httpd_req_t *req) {
+    // Start I2S + DMA capture setup
+    setup();
+
+    // Start the capture task pinned to core 1
+    xTaskCreatePinnedToCore(command_loop_task, "CommandLoopTask", 4096, NULL, 5, NULL, 1);
+
+    // Send response back to browser
+    const char *resp = "Logic capture started for 5 seconds!";
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+
     return ESP_OK;
 }
 
@@ -177,7 +261,7 @@ esp_err_t dummy_handler(httpd_req_t *req) {
 // HTTP handler for processing function generator settings
 esp_err_t set_function_generator_handler(httpd_req_t *req) {
     char query[100], freq_str[10] = {0}, wave[10] = {0};
-    
+
     if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
         httpd_query_key_value(query, "freq", freq_str, sizeof(freq_str));
         httpd_query_key_value(query, "wave", wave, sizeof(wave));
@@ -213,7 +297,7 @@ esp_err_t graph_handler(httpd_req_t *req) {
 
 // Serve JavaScript file from SPIFFS
 esp_err_t js_handler(httpd_req_t *req) {
-    FILE *f = fopen("/spiffs/uPlot.iife.min.js", "r");  
+    FILE *f = fopen("/spiffs/uPlot.iife.min.js", "r");
     if (!f) {
         ESP_LOGE(LOG_TAG, "Failed to open uPlot.iife.min.js in SPIFFS");
         httpd_resp_send_404(req);

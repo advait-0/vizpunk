@@ -22,12 +22,27 @@
 #include "esp_adc/adc_continuous.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 
-  
+#define WIFI_CONNECTED_BIT BIT0
+
+EventGroupHandle_t wifi_event_group;
+// wifi_event_group = xEventGroupCreate();
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void setup(void);  // C-style declaration of the C++ function
+
+#ifdef __cplusplus
+}
+#endif
+
 #define DNS_PORT 53
-#define FSYNC_PIN 5    
-#define MOSI_PIN 23    
-#define SCLK_PIN 18  
+#define FSYNC_PIN 5
+#define MOSI_PIN 23
+#define SCLK_PIN 18
 #define SINE_WAVE     0x0000
 #define TRIANGLE_WAVE 0x0002
 #define SQUARE_WAVE   0x0020  // MSB output
@@ -41,10 +56,22 @@
 #define TIMEOUT_MS           1000               // Timeout for ADC read
 
 volatile uint16_t adc_data = 0;  // Shared variable
-SemaphoreHandle_t mutex;    
+SemaphoreHandle_t mutex;
+void command_loop_task(void *param);
 
 adc_continuous_handle_t adc_handle;
 uint8_t adc_dma_buffer[BUFFER_SIZE] = {0};
+
+// // Wi-Fi event handler for connection events
+// static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+//     int32_t event_id, void* event_data) {
+// if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) {
+// // Set the connected bit when the AP is started
+// xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+// ESP_LOGI(LOG_TAG, "Wi-Fi AP Started");
+// }
+// // Handle other events if needed (e.g., Wi-Fi stop, disconnect, etc.)
+// }
 
 void init_adc_continuous(void)
 {
@@ -68,7 +95,7 @@ void init_adc_continuous(void)
             .atten = ADC_ATTEN_DB_12,    // Use 12 dB attenuation (recommended replacement)
             .channel = ADC_CHANNEL,
             .bit_width = ADC_BITWIDTH_12,
-            .unit = ADC_UNIT_1      
+            .unit = ADC_UNIT_1
     };
 
     adc_cont_config.adc_pattern = &adc_pattern;
@@ -118,7 +145,7 @@ void calculate_frequency_registers(float freq_hz, uint16_t *freq_lsb, uint16_t *
     ESP_LOGI(TAG, "Calculated Freq: %.2f Hz, LSB: 0x%04X, MSB: 0x%04X", freq_hz, *freq_lsb, *freq_msb);
 }
 
-// Send data to AD9833 
+// Send data to AD9833
 void send_ad9833(uint16_t freq_lsb, uint16_t freq_msb, const char* wave) {
     freq_lsb = swap_bytes(freq_lsb);
     freq_msb = swap_bytes(freq_msb);
@@ -133,16 +160,16 @@ void send_ad9833(uint16_t freq_lsb, uint16_t freq_msb, const char* wave) {
 
     // Send frequency LSB
     gpio_set_level(FSYNC_PIN, 0);
-    t.tx_buffer = &freq_lsb; 
+    t.tx_buffer = &freq_lsb;
     spi_device_transmit(spi, &t);
     gpio_set_level(FSYNC_PIN, 1);
-    
+
     // Send frequency MSB
     gpio_set_level(FSYNC_PIN, 0);
-    t.tx_buffer = &freq_msb; 
+    t.tx_buffer = &freq_msb;
     spi_device_transmit(spi, &t);
     gpio_set_level(FSYNC_PIN, 1);
-    
+
     // Select wave output
     ESP_LOGI(TAG, "Wave type: %s", wave);
     gpio_set_level(FSYNC_PIN, 0);
@@ -158,7 +185,7 @@ void send_ad9833(uint16_t freq_lsb, uint16_t freq_msb, const char* wave) {
         wave_cmd = SINE_WAVE | EXIT;
     }
     wave_cmd = swap_bytes(wave_cmd);
-    t.tx_buffer = &wave_cmd; 
+    t.tx_buffer = &wave_cmd;
     spi_device_transmit(spi, &t);
     gpio_set_level(FSYNC_PIN, 1);
 
@@ -175,10 +202,10 @@ void init_spi() {
 
    spi_bus_config_t buscfg = {
        .mosi_io_num = MOSI_PIN,
-       .miso_io_num = -1,   
+       .miso_io_num = -1,
        .sclk_io_num = SCLK_PIN,
-       .quadwp_io_num = -1, 
-       .quadhd_io_num = -1, 
+       .quadwp_io_num = -1,
+       .quadhd_io_num = -1,
        .max_transfer_sz = 16,
    };
    esp_err_t ret = spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_DISABLED);
@@ -189,11 +216,11 @@ void init_spi() {
 
    spi_device_interface_config_t devcfg = {
        .clock_speed_hz = 1000000, // 1 MHz
-       .mode = 2,                
-       .spics_io_num = -1,     
+       .mode = 2,
+       .spics_io_num = -1,
        .queue_size = 1,
    };
-   
+
    ret = spi_bus_add_device(VSPI_HOST, &devcfg, &spi);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "SPI Device Add Failed: %s", esp_err_to_name(ret));
@@ -204,16 +231,16 @@ void init_spi() {
 void dns_server_task(void *pvParameters) {
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     struct sockaddr_in server_addr, client_addr;
-    
+
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(DNS_PORT);
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    
+
     bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
 
     char buffer[512];
     socklen_t client_len = sizeof(client_addr);
-    
+
     while (1) {
         int recv_len = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &client_len);
         if (recv_len > 0) {
@@ -221,7 +248,7 @@ void dns_server_task(void *pvParameters) {
             buffer[2] |= 0x80; // Set response flag
             buffer[3] |= 0x00; // Set recursion available
             buffer[7] = 1;     // Set answer count to 1
-            
+
             // Set answer section
             size_t offset = recv_len;
             buffer[offset++] = 0xC0; buffer[offset++] = 0x0C; // Pointer to question
@@ -281,6 +308,8 @@ httpd_handle_t start_webserver(void) {
         httpd_uri_t uris[] = {
             {"/", HTTP_GET, page_handler, NULL},
             {"/set_function_generator", HTTP_GET, set_function_generator_handler, NULL},
+            {"/logic_analyzer", HTTP_GET, logic_analyzer_handler, NULL},
+            {"/start_logic_capture", HTTP_GET, start_logic_capture_handler, NULL},
             {"/adc", HTTP_GET, adc_handler, NULL},
             {"/function_generator", HTTP_GET, function_generator_handler, NULL},
             {"/psu", HTTP_GET, psu_handler, NULL},
@@ -291,9 +320,9 @@ httpd_handle_t start_webserver(void) {
             {"/generate204", HTTP_GET, page_handler, NULL}, // Android captive portal check
             {"/favicon.ico", HTTP_GET, dummy_handler, NULL},
             {"/chat", HTTP_GET, dummy_handler, NULL},
-            {"*", HTTP_GET, redirect_handler, NULL}  
+            {"*", HTTP_GET, redirect_handler, NULL}
         };
-        
+
         for (int i = 0; i < sizeof(uris) / sizeof(uris[0]); i++) {
             httpd_register_uri_handler(server, &uris[i]);
         }
@@ -302,31 +331,79 @@ httpd_handle_t start_webserver(void) {
 }
 
 // Initialize Wi-Fi
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+    int32_t event_id, void* event_data) {
+if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) {
+ESP_LOGI(LOG_TAG, "Wi-Fi AP Started");
+xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+}
+}
+
 void init_wifi() {
-    ESP_LOGI(LOG_TAG, "Setting up Wi-Fi...");
-    esp_netif_init();
-    esp_event_loop_create_default();
-    esp_netif_create_default_wifi_ap();
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-    wifi_config_t wifi_config = {
-        .ap = { .ssid = "Vizpunk", .ssid_len = strlen("Vizpunk"), .password = "", .max_connection = 4, .authmode = WIFI_AUTH_OPEN }
-    };
-    esp_wifi_set_mode(WIFI_MODE_AP);
-    esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
-    esp_wifi_start();
+ESP_LOGI(LOG_TAG, "Setting up Wi-Fi...");
+
+wifi_event_group = xEventGroupCreate();
+ESP_ERROR_CHECK(esp_netif_init());
+ESP_ERROR_CHECK(esp_event_loop_create_default());
+esp_netif_create_default_wifi_ap();
+
+wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+// Set country (fix channel issues)
+wifi_country_t country = {
+.cc = "IN",  // Change to your country if needed
+.schan = 1,
+.nchan = 13,
+.policy = WIFI_COUNTRY_POLICY_AUTO
+};
+ESP_ERROR_CHECK(esp_wifi_set_country(&country));
+
+wifi_config_t wifi_config = {
+.ap = {
+.ssid = "Vizpunk",
+.ssid_len = strlen("Vizpunk"),
+.password = "",  // WPA2 requires at least 8 chars
+.max_connection = 4,
+.authmode = WIFI_AUTH_OPEN
+}
+};
+
+if (strlen((char *)wifi_config.ap.password) == 0) {
+wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+}
+
+ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                             ESP_EVENT_ANY_ID,
+                             &wifi_event_handler,
+                             NULL,
+                             NULL));
+ESP_ERROR_CHECK(esp_wifi_start());
+
+ESP_LOGI(LOG_TAG, "Waiting for Wi-Fi to start AP...");
+xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+ESP_LOGI(LOG_TAG, "Wi-Fi AP is ready.");
 }
 
 // Main function
 void app_main(void) {
+    esp_log_level_set("*", ESP_LOG_INFO); // Optional: sets all logs to INFO
+    esp_log_level_set("intr_alloc", ESP_LOG_DEBUG);
+
     ESP_ERROR_CHECK(nvs_flash_init());
     gpio_config(&io_conf);
     init_spi();
     init_spiffs();
     list_spiffs_files();
     init_wifi();
+    vTaskDelay(pdMS_TO_TICKS(10000));
+    // xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
     start_dns_server();
     start_webserver();
-    init_adc_continuous();
-    xTaskCreatePinnedToCore(adc_read_task, "ADC_Read_Task", 4096, NULL, 7, NULL, 1);
+    // init_adc_continuous();
+    // setup();
+    // xTaskCreatePinnedToCore(command_loop_task, "CommandLoopTask", 4096, NULL, 5, NULL, 1);
+    // xTaskCreatePinnedToCore(adc_read_task, "ADC_Read_Task", 4096, NULL, 7, NULL, 1);
 }
